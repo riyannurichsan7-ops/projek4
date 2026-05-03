@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Alam: Misteri Makhluk Hidup</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- External Libraries (Confetti & SweetAlert for premium feel) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'fredoka': ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        wood: '#8B5A2B',
+                        woodDark: '#5C3A21',
+                        paper: '#FFF8DC',
+                        paperDark: '#DEB887',
+                        ink: '#4A3018',
+                        primary: '#4ADE80',
+                        secondary: '#38BDF8',
+                        accent: '#F59E0B'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Mencegah layar putih saat transisi dasar di semua root element, dan mematikan highlight tap biru di HP */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            background-color: #5C3A21 !important; 
+        }
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            overflow: hidden; 
+            user-select: none;
+        }
+
+        /* Background Themes dengan Fallback Warna Solid agar tidak ada celah putih */
+        .theme-main { background-color: #fed6e3; background-image: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .theme-level-1 { background-color: #3b82f6; background-image: linear-gradient(to bottom, #86efac, #3b82f6); }
+        .theme-level-2 { background-color: #166534; background-image: linear-gradient(to bottom, #fde047, #166534); }
+        .theme-level-3 { background-color: #047857; background-image: linear-gradient(to bottom, #a7f3d0, #047857); }
+        .theme-level-4 { background-color: #6d28d9; background-image: linear-gradient(to bottom, #c4b5fd, #6d28d9); }
+
+        /* WOODEN BOARD STYLE */
+        .wood-board {
+            background-color: #8B5A2B;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 15px,
+                rgba(0,0,0,0.05) 15px,
+                rgba(0,0,0,0.05) 30px
+            );
+            border: 6px solid #5C3A21;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), inset 0 0 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .wood-board::before, .wood-board::after {
+            content: ''; position: absolute; width: 12px; height: 12px; background: #3a2212; border-radius: 50%;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2);
+        }
+        .wood-board::before { top: 10px; left: 10px; }
+        .wood-board::after { bottom: 10px; right: 10px; }
+        .wood-board-extra-nails { position: absolute; inset: 0; pointer-events: none; }
+        .wood-board-extra-nails::before, .wood-board-extra-nails::after {
+            content: ''; position: absolute; width: 12px; height: 12px; background: #3a2212; border-radius: 50%;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.2);
+        }
+        .wood-board-extra-nails::before { top: 10px; right: 10px; }
+        .wood-board-extra-nails::after { bottom: 10px; left: 10px; }
+
+        /* Sembunyikan lubang baut pada papan berukuran kecil agar teks tidak terhalang */
+        .wood-board.rounded-full::before, .wood-board.rounded-full::after,
+        .wood-board.rounded-xl::before, .wood-board.rounded-xl::after {
+            display: none !important;
+        }
+
+        /* JOURNAL PAPER STYLE */
+        .journal-paper {
+            background-color: #FFF8DC;
+            background-image: linear-gradient(#e2cda0 1px, transparent 1px);
+            background-size: 100% 2em;
+            background-position-y: 2.5em;
+            border: 2px solid #DEB887;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.2);
+            color: #4A3018; 
+        }
+        .tape {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 100px;
+            height: 25px;
+            background-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* WOODEN BUTTONS */
+        .btn-3d { transition: all 0.1s; position: relative; }
+        .btn-3d:active { transform: translateY(4px); border-bottom-width: 0px !important; margin-bottom: 4px; }
+        
+        .btn-wood-green { background: #4ADE80; border: 2px solid #166534; border-bottom: 8px solid #166534; color: white; }
+        .btn-wood-red { background: #EF4444; border: 2px solid #991B1B; border-bottom: 8px solid #991B1B; color: white; }
+        .btn-wood-blue { background: #38BDF8; border: 2px solid #0369A1; border-bottom: 8px solid #0369A1; color: white; }
+        .btn-wood-paper { background: #FFF8DC; border: 2px solid #DEB887; border-bottom: 8px solid #DEB887; color: #4A3018; }
+        
+        /* Animations Mencegah Layar Putih (Flash) */
+        @keyframes fadeInScreen { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+        @keyframes fadeUpContent {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .screen { display: none; transform: translateZ(0); }
+        .screen.active { 
+            display: flex; 
+            animation: fadeInScreen 0.3s ease-out forwards; 
+        }
+        
+        .content-fade-in {
+            animation: fadeUpContent 0.3s ease-out forwards;
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px) rotate(-5deg); } 75% { transform: translateX(10px) rotate(5deg); } }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #8B5A2B; border-radius: 10px; }
+    </style>
+</head>
+<body class="w-full h-screen text-dark theme-main relative">
+
+    <!-- CANVAS CONFETTI PERMANEN (Mencegah flash putih saat rendering dadakan di HP) -->
+    <canvas id="confetti-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[9999]" style="background: transparent;"></canvas>
+
+    <!-- TOMBOL PENGATURAN SUARA -->
+    <button id="btn-sound-toggle" onclick="toggleSound()" class="fixed bottom-4 left-4 z-50 btn-3d w-10 h-10 md:w-12 md:h-12 btn-wood-paper rounded-full text-woodDark flex items-center justify-center text-lg md:text-xl shadow-lg border-2 border-woodDark transition-colors">
+        <i class="fas fa-volume-up text-green-600"></i>
+    </button>
+
+    <!-- Cloud Overlay -->
+    <div class="absolute inset-0 pointer-events-none opacity-50 z-0" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'><path d=\'M20 40 Q30 20 50 30 Q70 20 80 40 Q90 40 90 60 Q80 80 50 70 Q20 80 10 60 Q10 40 20 40 Z\' fill=\'rgba(255,255,255,0.4)\'/></svg>'); background-size: 200px; animation: float 10s linear infinite;"></div>
+
+    <!-- 1. LOADING SCREEN -->
+    <div id="screen-loading" class="screen active flex-col items-center justify-center w-full h-full relative z-10 bg-woodDark">
+        <div class="animate-float mb-4 text-8xl">🦉</div>
+        <h1 class="text-4xl md:text-6xl font-bold text-paper drop-shadow-lg text-center mb-8">Memuat Kemah...</h1>
+        <div class="w-64 h-6 bg-wood rounded-full p-1 border-2 border-paperDark">
+            <div id="loading-bar" class="h-full bg-green-400 rounded-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- MODAL NAMA PEMAIN -->
+    <div id="modal-name-input" class="fixed inset-0 bg-black/80 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="wood-board p-8 rounded-3xl text-center max-w-sm w-full animate-float">
+            <div class="text-5xl mb-4">🏕️</div>
+            <h2 class="text-2xl font-black text-white mb-4 drop-shadow-md">Siapa namamu, Penjelajah?</h2>
+            <input type="text" id="player-name-input" placeholder="Ketik namamu di sini..." class="w-full p-4 rounded-xl text-center font-bold text-xl text-ink border-4 border-woodDark mb-6 focus:outline-none focus:ring-4 focus:ring-yellow-400 bg-paper" maxlength="15" autocomplete="off">
+            <button onclick="savePlayerName()" class="btn-3d w-full btn-wood-green font-bold text-xl py-3 rounded-full flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> SIMPAN NAMA
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL PEMBAHASAN / FEEDBACK -->
+    <div id="modal-feedback" class="fixed inset-0 bg-black/80 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="wood-board p-6 md:p-8 rounded-3xl text-center max-w-lg w-full animate-float shadow-2xl border-4 border-white">
+            <div class="wood-board-extra-nails"></div>
+            <div id="feedback-icon" class="text-5xl md:text-6xl mb-4">🦉</div>
+            <h2 id="feedback-title" class="text-2xl md:text-3xl font-black text-white mb-2 drop-shadow-md border-b-4 border-woodDark pb-2">Kurang Tepat!</h2>
+            
+            <div class="journal-paper p-5 rounded-xl mt-4 transform rotate-1 shadow-inner text-left relative">
+                <div class="tape"></div>
+                <p class="text-woodDark font-bold text-xs md:text-sm mb-1 uppercase tracking-wider">Jawaban yang benar:</p>
+                <p id="feedback-correct-answer" class="text-green-700 font-black text-lg md:text-xl mb-4 border-b-2 border-green-200 pb-2"></p>
+                
+                <p class="text-woodDark font-bold text-xs md:text-sm mb-1 uppercase tracking-wider"><i class="fas fa-lightbulb text-yellow-500"></i> Pembahasan Piko:</p>
+                <p id="feedback-explanation" class="text-ink font-bold text-sm md:text-base leading-relaxed"></p>
+            </div>
+            
+            <button onclick="closeFeedback()" class="btn-3d w-full btn-wood-blue font-bold text-xl py-4 mt-6 rounded-full flex items-center justify-center gap-2 shadow-lg">
+                <i class="fas fa-thumbs-up"></i> SAYA MENGERTI!
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL RAPOR EVALUASI -->
+    <div id="modal-report" class="fixed inset-0 bg-black/80 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="wood-board p-6 md:p-8 rounded-3xl text-center max-w-sm w-full animate-float shadow-2xl border-4 border-white">
+            <div class="text-5xl mb-4">📜</div>
+            <h2 class="text-2xl font-black text-white mb-4 drop-shadow-md border-b-2 border-woodDark pb-2">Rapor Evaluasi</h2>
+            
+            <div class="journal-paper p-4 rounded-xl text-left shadow-inner mb-6 transform -rotate-1">
+                <div class="flex justify-between items-center mb-2 border-b border-wood/30 pb-2">
+                    <span class="font-bold text-ink"><i class="fas fa-check-circle text-green-600"></i> Jawaban Benar</span>
+                    <span id="report-correct" class="font-black text-green-700 text-xl">0</span>
+                </div>
+                <div class="flex justify-between items-center mb-2 border-b border-wood/30 pb-2">
+                    <span class="font-bold text-ink"><i class="fas fa-times-circle text-red-600"></i> Jawaban Salah</span>
+                    <span id="report-wrong" class="font-black text-red-700 text-xl">0</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <span class="font-bold text-ink text-lg">Nilai Akhir</span>
+                    <span id="report-score" class="font-black text-blue-700 text-3xl">100</span>
+                </div>
+            </div>
+            
+            <button onclick="closeReport()" class="btn-3d w-full btn-wood-paper font-bold text-xl py-3 rounded-full flex items-center justify-center gap-2">
+                <i class="fas fa-times"></i> TUTUP
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL FAKTA UNIK (Easter Egg) -->
+    <div id="modal-easter-egg" class="fixed inset-0 bg-black/80 z-50 hidden flex-col items-center justify-center p-4">
+        <div class="wood-board p-6 md:p-8 rounded-3xl text-center max-w-sm w-full animate-float shadow-2xl border-4 border-white">
+            <div class="wood-board-extra-nails"></div>
+            <div class="text-6xl md:text-7xl mb-2 animate-bounce" id="egg-modal-icon">🍄</div>
+            <h2 class="text-2xl font-black text-yellow-300 mb-2 drop-shadow-md">Rahasia Ditemukan!</h2>
+            
+            <div class="journal-paper p-4 rounded-xl text-left shadow-inner mb-4 transform rotate-1 relative">
+                <div class="tape"></div>
+                <p class="text-woodDark font-bold text-xs md:text-sm mb-1 uppercase tracking-wider text-center"><i class="fas fa-search"></i> Fakta Unik Alam</p>
+                <p id="egg-modal-fact" class="text-ink font-bold text-sm md:text-base leading-relaxed text-center"></p>
+            </div>
+            
+            <div class="bg-green-600 border-2 border-green-800 text-white font-black py-2 px-4 rounded-xl mb-6 shadow-inner inline-block">
+                Bonus: +5 Daun <i class="fas fa-leaf text-yellow-300"></i>
+            </div>
+            
+            <button onclick="closeEggModal()" class="btn-3d w-full btn-wood-green font-bold text-xl py-3 rounded-full flex items-center justify-center gap-2">
+                <i class="fas fa-check"></i> KUMPULKAN
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. MAIN MENU -->
+    <div id="screen-menu" class="screen flex-col w-full h-full relative z-10 overflow-y-auto p-4">
+        <div class="m-auto wood-board p-8 rounded-3xl text-center max-w-md w-full animate-float my-10">
+            <div class="wood-board-extra-nails"></div>
+            <div class="text-6xl mb-4">🌳🦉🦋</div>
+            
+            <div id="menu-welcome-text" class="text-yellow-300 font-bold mb-2 text-lg drop-shadow-sm">Halo, Penjelajah!</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-lg border-b-4 border-woodDark pb-4">Petualangan Alam</h1>
+            <h2 class="text-xl md:text-2xl font-bold text-yellow-300 mb-6 drop-shadow-md mt-4">Misteri Makhluk Hidup</h2>
+            
+            <div class="journal-paper p-3 rounded-lg mb-8 font-bold text-ink transform -rotate-2">
+                IPAS Kelas 3 SD<br>Kurikulum Merdeka
+            </div>
+            
+            <button onclick="startGameMenu()" class="btn-3d w-full btn-wood-green font-bold text-2xl py-4 rounded-full mb-4 flex items-center justify-center gap-3">
+                <i class="fas fa-play"></i> MULAI PETUALANGAN
+            </button>
+            <button onclick="openCollection()" class="btn-3d w-full btn-wood-paper font-bold text-xl py-3 rounded-full mb-4 flex items-center justify-center gap-3">
+                <i class="fas fa-book-open text-woodDark"></i> ENSIKLOPEDIA ALAM
+            </button>
+            <button onclick="resetProgress()" class="text-white opacity-80 font-bold hover:opacity-100 hover:underline text-sm mt-2 bg-black/30 px-4 py-2 rounded-full">
+                Hapus Jejak (Ganti Pemain)
+            </button>
+        </div>
+    </div>
+
+    <!-- BUKU KOLEKSI -->
+    <div id="screen-collection" class="screen flex-col w-full h-full relative z-10 overflow-y-auto p-4 pb-32">
+        <div class="m-auto journal-paper p-6 md:p-10 rounded-lg text-center max-w-4xl w-full relative mt-10 mb-8 shadow-2xl">
+            <div class="tape"></div>
+            
+            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 wood-board text-white px-8 py-2 rounded-full font-black tracking-widest text-lg md:text-xl shadow-lg border-2 border-white whitespace-nowrap">
+                ENSIKLOPEDIA ALAM
+            </div>
+            
+            <p class="text-ink font-bold mt-8 mb-6 italic text-sm md:text-base">Selesaikan setiap Pos Penjelajahan untuk mengumpulkan kartu makhluk hidup!</p>
+
+            <div id="collection-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 text-left">
+                <!-- Kartu Koleksi akan dimuat oleh JavaScript di sini -->
+            </div>
+
+            <button onclick="closeCollection()" class="btn-3d w-full md:w-auto px-10 btn-wood-red text-white font-bold text-xl py-3 rounded-full flex items-center justify-center gap-3 mx-auto shadow-lg">
+                <i class="fas fa-arrow-left"></i> KEMBALI KE KEMAH
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. MAP SCREEN (ZIG-ZAG) -->
+    <div id="screen-map" class="screen flex-col w-full h-full relative z-10 bg-[#fdf5e6]">
+        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#deb887 2px, transparent 2px); background-size: 30px 30px;"></div>
+
+        <div class="wood-board m-4 p-4 rounded-2xl flex justify-between items-center z-20 shadow-xl">
+            <div class="wood-board-extra-nails"></div>
+            <div class="flex items-center gap-2">
+                <div class="bg-yellow-400 text-woodDark p-2 rounded-full w-12 h-12 flex items-center justify-center font-black border-4 border-wood shadow-lg text-xl">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="font-bold text-lg leading-tight text-white">
+                    <div class="text-white/80 text-xs uppercase tracking-wider">Total Daun</div>
+                    <div id="map-score" class="text-yellow-300 text-xl font-black">0</div>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-center text-white hidden md:block tracking-widest uppercase">Peta Hutan</h2>
+            <button onclick="showScreen('screen-menu')" class="btn-3d bg-red-500 border-2 border-red-900 border-b-4 text-white w-12 h-12 rounded-full font-bold flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="map-container w-full max-w-lg mx-auto flex-1 overflow-y-auto p-4 md:p-8 flex flex-col-reverse items-stretch pb-32 relative">
+            
+            <!-- Level 1 -->
+            <div class="relative flex flex-col items-center w-32 md:w-40 self-end mr-4 md:mr-8 z-10">
+                <div id="egg-1" onclick="findEgg(1)" class="absolute -left-12 bottom-4 text-4xl cursor-pointer hover:scale-125 transition-transform z-20 animate-pulse drop-shadow-lg" title="Ada yang mencurigakan di sini...">🍄</div>
+                <div id="player-marker-1" class="absolute -top-16 md:-top-20 z-30 pointer-events-none"></div>
+                <div class="wood-board px-4 py-1 rounded-full font-bold text-xs md:text-sm mb-3 shadow-md text-white border-2">Pos 1</div>
+                <button id="btn-level-1" onclick="startLevel(1)" class="btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full btn-wood-blue flex flex-col items-center justify-center text-4xl shadow-2xl relative z-10 border-4 border-white">
+                    🏡
+                </button>
+                <div class="text-center mt-4 font-bold text-sm md:text-lg journal-paper px-4 py-1 md:px-6 md:py-2 rounded-lg shadow-md transform rotate-2 whitespace-nowrap">Taman Manusia</div>
+                <div id="stars-level-1" class="flex gap-1 mt-2 text-xl md:text-2xl z-10"></div>
+            </div>
+
+            <!-- Path L1 to L2 -->
+            <svg class="w-full h-20 md:h-28 opacity-40 text-woodDark z-0" viewBox="0 0 100 100" preserveAspectRatio="none" style="margin: -2rem 0;">
+                <path d="M 80 100 C 80 50, 20 50, 20 0" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="8,8" stroke-linecap="round"/>
+            </svg>
+
+            <!-- Level 2 -->
+            <div class="relative flex flex-col items-center w-32 md:w-40 self-start ml-4 md:ml-8 z-10">
+                <div id="egg-2" onclick="findEgg(2)" class="absolute -right-10 top-10 text-4xl cursor-pointer hover:scale-125 transition-transform z-20 animate-pulse drop-shadow-lg" title="Ada yang mencurigakan di sini...">🌿</div>
+                <div id="player-marker-2" class="absolute -top-16 md:-top-20 z-30 pointer-events-none"></div>
+                <div class="wood-board px-4 py-1 rounded-full font-bold text-xs md:text-sm mb-3 shadow-md text-white border-2">Pos 2</div>
+                <button id="btn-level-2" onclick="startLevel(2)" class="btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-400 border-4 border-gray-600 border-b-8 flex flex-col items-center justify-center text-white text-4xl shadow-xl relative z-10 cursor-not-allowed">
+                    <i class="fas fa-lock text-2xl md:text-3xl"></i>
+                </button>
+                <div class="text-center mt-4 font-bold text-sm md:text-lg journal-paper px-4 py-1 md:px-6 md:py-2 rounded-lg shadow-md transform -rotate-1 whitespace-nowrap">Hutan Satwa</div>
+                <div id="stars-level-2" class="flex gap-1 mt-2 text-xl md:text-2xl z-10"></div>
+            </div>
+
+            <!-- Path L2 to L3 -->
+            <svg class="w-full h-20 md:h-28 opacity-40 text-woodDark z-0" viewBox="0 0 100 100" preserveAspectRatio="none" style="margin: -2rem 0;">
+                <path d="M 20 100 C 20 50, 80 50, 80 0" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="8,8" stroke-linecap="round"/>
+            </svg>
+
+            <!-- Level 3 -->
+            <div class="relative flex flex-col items-center w-32 md:w-40 self-end mr-4 md:mr-8 z-10">
+                <div id="egg-3" onclick="findEgg(3)" class="absolute -left-10 top-0 text-4xl cursor-pointer hover:scale-125 transition-transform z-20 animate-pulse drop-shadow-lg" title="Ada yang mencurigakan di sini...">🪨</div>
+                <div id="player-marker-3" class="absolute -top-16 md:-top-20 z-30 pointer-events-none"></div>
+                <div class="wood-board px-4 py-1 rounded-full font-bold text-xs md:text-sm mb-3 shadow-md text-white border-2">Pos 3</div>
+                <button id="btn-level-3" onclick="startLevel(3)" class="btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-400 border-4 border-gray-600 border-b-8 flex flex-col items-center justify-center text-white text-4xl shadow-xl relative z-10 cursor-not-allowed">
+                    <i class="fas fa-lock text-2xl md:text-3xl"></i>
+                </button>
+                <div class="text-center mt-4 font-bold text-sm md:text-lg journal-paper px-4 py-1 md:px-6 md:py-2 rounded-lg shadow-md transform rotate-1 whitespace-nowrap">Kebun Raya</div>
+                <div id="stars-level-3" class="flex gap-1 mt-2 text-xl md:text-2xl z-10"></div>
+            </div>
+
+            <!-- Path L3 to L4 -->
+            <svg class="w-full h-20 md:h-28 opacity-40 text-woodDark z-0" viewBox="0 0 100 100" preserveAspectRatio="none" style="margin: -2rem 0;">
+                <path d="M 80 100 C 80 50, 20 50, 20 0" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="8,8" stroke-linecap="round"/>
+            </svg>
+
+            <!-- Level 4 -->
+            <div class="relative flex flex-col items-center w-32 md:w-40 self-start ml-4 md:ml-8 z-10">
+                <div id="player-marker-4" class="absolute -top-16 md:-top-20 z-30 pointer-events-none"></div>
+                <div class="wood-board px-4 py-1 rounded-full font-bold text-xs md:text-sm mb-3 shadow-md text-white border-2">Pos 4</div>
+                <button id="btn-level-4" onclick="startLevel(4)" class="btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-400 border-4 border-gray-600 border-b-8 flex flex-col items-center justify-center text-white text-4xl shadow-xl relative z-10 cursor-not-allowed">
+                    <i class="fas fa-lock text-2xl md:text-3xl"></i>
+                </button>
+                <div class="text-center mt-4 font-bold text-sm md:text-lg journal-paper px-4 py-1 md:px-6 md:py-2 rounded-lg shadow-md transform -rotate-2 whitespace-nowrap">Pulau Kehidupan</div>
+                <div id="stars-level-4" class="flex gap-1 mt-2 text-xl md:text-2xl z-10"></div>
+            </div>
+
+            <!-- Garis Finish -->
+            <div class="w-full text-center mt-8 mb-4 z-10 flex flex-col items-center relative">
+                <div id="player-marker-5" class="absolute -top-16 md:-top-20 z-30 pointer-events-none"></div>
+                <div class="text-5xl mb-2 animate-bounce">🏆</div>
+                <div class="wood-board px-8 py-3 rounded-full text-white font-black text-lg md:text-xl uppercase tracking-widest shadow-xl">Puncak Petualangan!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LAYAR CERITA (VISUAL NOVEL / OBROLAN) -->
+    <div id="screen-story" class="screen flex-col w-full h-full relative z-10 overflow-y-auto p-4">
+        <div class="absolute inset-0 bg-black/60 z-0"></div>
+
+        <div class="m-auto w-full max-w-2xl relative z-10 flex flex-col justify-end min-h-[60vh] md:min-h-[70vh] pb-10">
+            <div class="w-32 h-32 md:w-40 md:h-40 bg-woodDark rounded-full border-8 border-wood shadow-2xl flex items-center justify-center text-7xl md:text-8xl relative overflow-hidden animate-float self-center mb-[-2rem] z-20">
+                🦉
+            </div>
+            
+            <div class="journal-paper p-6 md:p-8 rounded-2xl shadow-2xl relative transform rotate-1">
+                <div class="tape"></div> 
+                <h2 class="text-xl md:text-2xl font-black text-woodDark mb-2 tracking-wider border-b-2 border-wood/20 pb-2" id="story-title" style="font-family: serif;">Piko Berbicara...</h2>
+                <div class="text-left mb-6 min-h-[100px] md:min-h-[120px] flex items-start mt-4">
+                    <p class="text-ink font-bold text-lg md:text-2xl leading-relaxed" id="story-text"></p>
+                </div>
+                
+                <div class="flex justify-end mt-4">
+                    <button id="btn-next-dialogue" onclick="nextDialogue()" class="btn-3d w-full md:w-auto px-8 btn-wood-blue text-white font-bold text-lg py-3 rounded-full flex items-center justify-center gap-2 shadow-lg animate-pulse">
+                        LANJUT <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button id="btn-start-quiz" onclick="proceedToGame()" class="hidden btn-3d w-full md:w-auto px-10 btn-wood-green text-white font-bold text-xl py-4 rounded-full flex items-center justify-center gap-3 shadow-lg transform -rotate-1">
+                        <i class="fas fa-search"></i> MULAI KUIS!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. GAMEPLAY SCREEN -->
+    <div id="screen-game" class="screen flex-col w-full h-full relative z-10">
+        <div class="p-3 md:p-4 flex justify-between items-center z-20 gap-2">
+            <div class="wood-board px-3 py-2 md:px-5 md:py-3 rounded-full flex gap-1 text-red-400 text-sm md:text-xl shrink-0" id="lives-container"></div>
+            <div class="wood-board px-4 py-2 md:px-8 md:py-3 rounded-full font-black text-sm md:text-xl text-yellow-300 flex items-center gap-2 shrink-0">
+                <i class="fas fa-leaf text-green-400"></i> <span id="game-score">0</span>
+            </div>
+            <button onclick="quitGame()" class="btn-3d w-10 h-10 md:w-12 md:h-12 btn-wood-red rounded-full text-white flex items-center justify-center shrink-0">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+
+        <div class="px-3 md:px-4 z-20 mb-2">
+            <div class="w-full h-4 md:h-5 bg-woodDark rounded-full p-1 shadow-inner overflow-hidden border-2 border-wood">
+                <div id="timer-bar" class="h-full bg-green-400 rounded-full w-full transition-all duration-1000 linear shadow-md"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 w-full overflow-y-auto p-4 pb-32 flex flex-col z-20 relative">
+            <div id="question-card" class="m-auto journal-paper w-full max-w-2xl p-6 md:p-10 rounded-lg shadow-2xl relative mt-8 mb-8 transform -rotate-1">
+                <div class="tape"></div>
+                <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 wood-board text-white px-6 py-2 rounded-full font-bold text-sm md:text-base whitespace-nowrap">
+                    Pertanyaan <span id="q-current">1</span> / 10
+                </div>
+                <h3 id="question-text" class="text-xl md:text-2xl font-bold text-center text-ink mt-6 mb-8 leading-relaxed" style="font-family: serif;">
+                    Memuat pertanyaan...
+                </h3>
+                <div id="options-container" class="grid grid-cols-1 gap-3 md:gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. RESULT SCREEN -->
+    <div id="screen-result" class="screen flex-col w-full h-full relative z-10 overflow-y-auto p-4 pb-32">
+        <div class="m-auto wood-board p-6 md:p-10 rounded-3xl text-center max-w-2xl w-full my-10">
+            <div class="wood-board-extra-nails"></div>
+            <div class="text-6xl md:text-7xl mb-4 animate-float" id="result-icon">🏆</div>
+            <h1 class="text-3xl md:text-4xl font-black text-white mb-2 uppercase tracking-widest border-b-4 border-woodDark pb-4" id="result-title">Pos Selesai!</h1>
+            
+            <div class="journal-paper p-4 md:p-8 rounded-lg my-8 transform rotate-1 shadow-xl relative">
+                <div class="tape"></div>
+                <p class="text-ink font-bold mb-2 text-sm md:text-lg uppercase">Daun yang Dikumpulkan:</p>
+                <div class="text-5xl md:text-6xl font-black text-green-600 mb-6 flex justify-center items-center gap-3">
+                    <i class="fas fa-leaf text-4xl"></i> <span id="result-score">100</span>
+                </div>
+                
+                <div id="badge-reward" class="hidden flex-col items-center justify-center bg-blue-50 p-4 rounded-xl border-4 border-blue-200 shadow-inner">
+                    <p class="text-xs md:text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Lencana Baru Didapatkan!</p>
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center text-4xl border-4 border-white shadow-lg animate-float" id="badge-icon">🎖️</div>
+                    <p class="font-black text-blue-900 mt-3 text-base md:text-xl uppercase" id="badge-name">Lencana Pengamat</p>
+                </div>
+
+                <div id="card-reward" class="hidden flex-col items-center justify-center bg-green-50 p-4 rounded-xl border-4 border-green-200 shadow-inner mt-4">
+                    <p class="text-xs md:text-sm font-bold text-green-800 mb-2 uppercase tracking-wider">Kartu Ensiklopedia Terbuka!</p>
+                    <div class="journal-paper p-3 rounded shadow-md transform rotate-2 w-full max-w-xs flex items-center gap-3 border border-woodDark">
+                        <div class="text-4xl bg-wood/20 p-2 rounded-full" id="card-reward-icon">👦</div>
+                        <div class="text-left flex-1">
+                            <p class="font-black text-woodDark text-lg leading-tight" id="card-reward-name">Manusia</p>
+                            <p class="text-[10px] md:text-xs text-ink font-medium leading-tight mt-1" id="card-reward-desc">Makhluk hidup yang bernapas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="certificate-box" class="hidden flex-col items-center justify-center mt-6 border-4 border-double border-woodDark p-6 rounded-lg bg-[#fff8dc] relative overflow-hidden">
+                    <div class="absolute opacity-5 text-9xl">🌳</div>
+                    <h3 class="font-black text-base md:text-xl text-woodDark tracking-widest border-b-2 border-woodDark pb-2 mb-2">SERTIFIKAT PENJELAJAH</h3>
+                    <p class="text-xs md:text-sm mt-2 text-ink font-medium">Diberikan secara resmi kepada:</p>
+                    <h2 id="cert-player-name" class="text-xl md:text-3xl font-black text-green-700 my-3 uppercase" style="font-family: serif;">Ahli Alam Cilik</h2>
+                    <p class="text-[10px] md:text-sm italic text-ink font-medium">Telah berhasil menyelesaikan seluruh misi Pengenalan Makhluk Hidup!</p>
+                </div>
+            </div>
+
+            <button onclick="showReport()" class="btn-3d w-full btn-wood-paper text-ink font-bold text-xl py-3 rounded-full flex items-center justify-center gap-3 mb-3 shadow-lg">
+                <i class="fas fa-file-alt text-blue-600"></i> LIHAT RAPOR EVALUASI
+            </button>
+            <button onclick="backToMap()" class="btn-3d w-full btn-wood-primary bg-green-500 border-2 border-green-800 border-b-8 text-white font-bold text-xl md:text-2xl py-4 rounded-full flex items-center justify-center gap-3">
+                <i class="fas fa-map"></i> KEMBALI KE PETA
+            </button>
+        </div>
+    </div>
+
+    <!-- MASCOT PIKO -->
+    <div id="mascot-container" class="fixed bottom-4 right-4 z-50 flex items-end gap-2 transition-transform duration-500 transform translate-y-32">
+        <div class="journal-paper p-3 shadow-xl max-w-[200px] border-2 border-woodDark rounded-xl relative">
+            <div class="absolute -right-3 bottom-4 w-0 h-0 border-t-[10px] border-t-transparent border-l-[15px] border-l-[#FFF8DC] border-b-[10px] border-b-transparent"></div>
+            <p id="mascot-text" class="font-bold text-sm text-ink leading-tight">Hoo! Hoo! Ayo bertualang bersamaku!</p>
+        </div>
+        <div class="w-20 h-20 bg-woodDark rounded-full border-4 border-wood shadow-2xl flex items-center justify-center text-5xl relative overflow-hidden animate-float cursor-pointer" onclick="mascotCheer()">
+            🦉
+        </div>
+    </div>
+
+    <!-- AUDIO ENGINE -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = false;
+        let bgmInterval = null;
+        let bgmStarted = false;
+        const bgmNotes = [261.63, 329.63, 392.00, 329.63, 261.63, 392.00, 523.25, 392.00];
+        let bgmIndex = 0;
+
+        // Custom Confetti Function to prevent white flashes on mobile
+        let customConfetti;
+
+        function initConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            customConfetti = confetti.create(canvas, {
+                resize: true,
+                useWorker: false // Menggunakan false mencegah HP nge-blank (memori stall) saat render
+            });
+        }
+
+        function toggleSound() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btn-sound-toggle');
+            if (isMuted) {
+                btn.innerHTML = '<i class="fas fa-volume-mute text-red-500"></i>';
+                stopBGM();
+            } else {
+                btn.innerHTML = '<i class="fas fa-volume-up text-green-600"></i>';
+                if(bgmStarted) startBGM();
+                playSound('click');
+            }
+        }
+
+        function startBGM() {
+            bgmStarted = true;
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            clearInterval(bgmInterval);
+            bgmInterval = setInterval(() => {
+                if (isMuted) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine'; 
+                osc.frequency.value = bgmNotes[bgmIndex];
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.4);
+                bgmIndex = (bgmIndex + 1) % bgmNotes.length;
+            }, 600); 
+        }
+
+        function stopBGM() {
+            clearInterval(bgmInterval);
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(600, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'correct') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(523.25, now + 0.1); osc.frequency.setValueAtTime(659.25, now + 0.2);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                [261.63, 329.63, 392.00, 523.25].forEach((freq, i) => {
+                    const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+                    osc2.type = 'square'; osc2.frequency.value = freq; osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                    gain2.gain.setValueAtTime(0.1, now); gain2.gain.linearRampToValueAtTime(0, now + 1.5);
+                    osc2.start(now + (i*0.1)); osc2.stop(now + 1.5);
+                });
+            } else if (type === 'lose') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now); osc.frequency.linearRampToValueAtTime(50, now + 1);
+                gainNode.gain.setValueAtTime(0.3, now); gainNode.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now); osc.stop(now + 1);
+            }
+        }
+    </script>
+
+    <!-- GAME LOGIC & DATA -->
+    <script>
+        const questionBank = {
+            1: [ 
+                { q: "Manusia membutuhkan makanan untuk...", options: ["Bisa terbang", "Mendapatkan energi dan tenaga", "Bisa tidur pulas", "Bisa melihat gelap"], a: 1, exp: "Makanan memberikan energi dan tenaga agar manusia bisa beraktivitas dan belajar." },
+                { q: "Alat pernapasan manusia adalah...", options: ["Insang", "Trakea", "Paru-paru", "Stomata"], a: 2, exp: "Manusia menghirup oksigen menggunakan organ paru-paru yang ada di dalam dada." },
+                { q: "Manusia bertambah tinggi dari bayi hingga dewasa. Ini membuktikan manusia...", options: ["Berkembang biak", "Bernapas", "Mengalami pertumbuhan", "Peka terhadap rangsang"], a: 2, exp: "Perubahan dari bayi menjadi dewasa yang bertambah tinggi dan berat adalah bukti bahwa manusia mengalami pertumbuhan." },
+                { q: "Saat cuaca sangat panas, kita merasa haus. Hal ini karena makhluk hidup membutuhkan...", options: ["Air", "Pakaian", "Mainan", "Rumah"], a: 0, exp: "Rasa haus adalah tanda atau sinyal bahwa tubuh kita sedang membutuhkan asupan air (minum)." },
+                { q: "Manusia menggunakan matanya untuk...", options: ["Mendengar suara", "Meraba benda", "Melihat keadaan sekitar", "Mencium bau"], a: 2, exp: "Mata adalah indera penglihatan yang diciptakan untuk melihat keadaan di sekitar kita." },
+                { q: "Manusia berkembang biak dengan cara bertelur.", type: "tf", options: ["BENAR", "SALAH"], a: 1, exp: "Manusia berkembang biak dengan cara melahirkan bayi untuk meneruskan keturunannya, bukan bertelur." },
+                { q: "Jika kita menyentuh panci panas, tangan otomatis ditarik. Ini bukti manusia...", options: ["Memerlukan makanan", "Peka terhadap rangsang", "Bisa tumbuh", "Berkembang biak"], a: 1, exp: "Menarik tangan seketika saat terkena benda panas adalah refleks yang membuktikan kita peka terhadap rangsang luar." },
+                { q: "Udara yang kita hirup saat bernapas mengandung Oksigen.", type: "tf", options: ["BENAR", "SALAH"], a: 0, exp: "Udara bersih yang dihirup dan sangat dibutuhkan tubuh manusia untuk bernapas adalah Oksigen." },
+                { q: "Makanan sehat untuk manusia sering disebut dengan istilah...", options: ["4 Sehat 5 Sempurna", "Makanan instan", "Camilan manis", "Makanan beku"], a: 0, exp: "Makanan bergizi seimbang untuk pertumbuhan manusia sering disebut dengan menu 4 Sehat 5 Sempurna." },
+                { q: "Tempat manusia tinggal untuk berlindung dari panas dan hujan adalah...", options: ["Hutan", "Sarang", "Rumah", "Gua"], a: 2, exp: "Manusia membangun dan tinggal di dalam rumah sebagai tempat berlindung dari cuaca panas, hujan, maupun bahaya." }
+            ],
+            2: [ 
+                { q: "Hewan yang bergerak dengan cara terbang menggunakan sayap adalah...", options: ["Ikan", "Kucing", "Burung", "Ular"], a: 2, exp: "Burung memiliki sayap yang memungkinkannya bergerak dengan cara terbang tinggi di udara." },
+                { q: "Kelompok hewan pemakan daging disebut...", options: ["Herbivora", "Karnivora", "Omnivora", "Insektivora"], a: 1, exp: "Karnivora adalah sebutan untuk hewan buas yang sumber makanan utamanya adalah daging hewan lain." },
+                { q: "Sapi, kambing, dan kuda adalah contoh hewan karnivora (pemakan daging).", type: "tf", options: ["BENAR", "SALAH"], a: 1, exp: "Sapi, kambing, dan kuda adalah hewan herbivora, yaitu hewan yang memakan tumbuhan seperti rumput dan dedaunan." },
+                { q: "Tempat hidup alami bagi ikan dan terumbu karang adalah di...", options: ["Udara", "Darat", "Air (Laut/Sungai)", "Padang Pasir"], a: 2, exp: "Ikan dan terumbu karang memiliki habitat (tempat hidup) alami di dalam perairan, seperti laut atau sungai." },
+                { q: "Hewan apa yang berkembang biak dengan cara bertelur?", options: ["Sapi", "Ayam", "Kucing", "Kambing"], a: 1, exp: "Unggas seperti burung dan ayam berkembang biak dengan cara bertelur (disebut juga ovipar)." },
+                { q: "Alat pernapasan utama pada ikan adalah...", options: ["Paru-paru", "Kulit", "Trakea", "Insang"], a: 3, exp: "Ikan bernapas dengan cara menyaring oksigen di dalam air menggunakan alat pernapasan khusus yaitu insang." },
+                { q: "Cara ular bergerak untuk berpindah tempat adalah dengan cara...", options: ["Berjalan", "Melompat", "Melata (Merayap)", "Berenang"], a: 2, exp: "Karena sama sekali tidak mempunyai kaki, ular bergerak dengan cara melata atau merayap menggunakan otot perutnya." },
+                { q: "Katak adalah hewan amfibi, yang berarti ia memiliki kemampuan untuk hidup di darat dan di air.", type: "tf", options: ["BENAR", "SALAH"], a: 0, exp: "Hewan amfibi seperti katak memiliki kemampuan unik dan alat pernapasan ganda untuk bisa bertahan hidup di dua alam: darat dan air." },
+                { q: "Kucing merespons bahaya (peka terhadap rangsang) dengan cara...", options: ["Tidur", "Mengeluarkan suara atau lari", "Makan rumput", "Berjemur"], a: 1, exp: "Kucing akan mengeong keras, mendesis, atau berlari menjauh sebagai bentuk respon (peka) terhadap ancaman/bahaya." },
+                { q: "Hewan mamalia biasanya berkembang biak dengan cara...", options: ["Melahirkan", "Bertelur", "Membelah diri", "Bertunas"], a: 0, exp: "Hewan mamalia (hewan menyusui seperti kucing, anjing, dan sapi) umumnya berkembang biak dengan cara melahirkan anak (vivipar)." }
+            ],
+            3: [ 
+                { q: "Bagian tumbuhan yang bertugas menyerap air dari dalam tanah adalah...", options: ["Daun", "Batang", "Akar", "Bunga"], a: 2, exp: "Akar tertanam kuat di dalam tanah untuk menopang tumbuhan sekaligus menyerap air dan zat hara." },
+                { q: "Tumbuhan bernapas menggunakan insang layaknya seekor ikan.", type: "tf", options: ["BENAR", "SALAH"], a: 1, exp: "Tumbuhan bernapas menggunakan pori-pori kecil di daunnya yang disebut stomata, bukan insang." },
+                { q: "Tumbuhan membuat makanannya sendiri dengan bantuan cahaya matahari. Proses ini disebut...", options: ["Pertumbuhan", "Pernapasan", "Fotosintesis", "Pencernaan"], a: 2, exp: "Fotosintesis adalah keajaiban alam di mana tumbuhan 'memasak' makanannya sendiri secara langsung menggunakan bantuan energi dari cahaya matahari." },
+                { q: "Selain cahaya matahari, tumbuhan juga membutuhkan ... untuk fotosintesis.", options: ["Air dan Karbon dioksida", "Daging", "Batu", "Susu"], a: 0, exp: "Selain cahaya matahari, bahan baku untuk proses fotosintesis adalah air dari tanah dan gas karbon dioksida dari udara." },
+                { q: "Bagian tumbuhan yang berwarna-warni untuk menarik serangga adalah...", options: ["Akar", "Bunga", "Batang", "Ranting"], a: 1, exp: "Bunga sengaja memiliki mahkota yang berwarna sangat cerah dan berbau harum untuk menarik perhatian lebah/kupu-kupu agar datang membantu penyerbukan." },
+                { q: "Daun putri malu yang menguncup saat disentuh adalah bukti bahwa tumbuhan peka terhadap rangsang.", type: "tf", options: ["BENAR", "SALAH"], a: 0, exp: "Daun putri malu yang langsung menutup rapat saat jari kita menyentuhnya adalah bukti paling nyata bahwa tumbuhan juga peka terhadap rangsangan fisik." },
+                { q: "Buah pada tumbuhan berfungsi untuk...", options: ["Melindungi biji", "Menyerap air", "Menangkap sinar matahari", "Penyangga tumbuhan"], a: 0, exp: "Selain sebagai cadangan makanan, daging buah sebenarnya berfungsi utama sebagai pembungkus yang melindungi biji di dalamnya agar tetap aman." },
+                { q: "Tumbuhan berkembang biak untuk...", options: ["Cepat mati", "Melestarikan jenisnya agar tidak punah", "Membuat angin", "Menjadi tinggi"], a: 1, exp: "Sama seperti hewan, semua jenis tumbuhan berkembang biak (menciptakan tumbuhan baru) agar jenis mereka tidak habis atau punah dari muka bumi." },
+                { q: "Batang pada tumbuhan berguna untuk...", options: ["Menyerap air tanah", "Menyalurkan air dan makanan ke daun", "Menghasilkan biji", "Bernapas"], a: 1, exp: "Batang bekerja bagaikan jalan tol bagi tumbuhan: ia menyalurkan air dari akar ke daun, lalu mengedarkan makanan yang sudah jadi dari daun ke seluruh tubuh." },
+                { q: "Tumbuhan mengubah gas Karbon Dioksida menjadi udara segar yang disebut...", options: ["Hidrogen", "Nitrogen", "Oksigen", "Asap"], a: 2, exp: "Hasil ajaib dari masakan fotosintesis tumbuhan adalah udara segar bernama Oksigen, yang setiap detik sangat dibutuhkan oleh manusia dan hewan untuk bernapas." }
+            ],
+            4: [ 
+                { q: "Berkarat (seperti besi yang menjadi kecoklatan) adalah salah satu ciri dari makhluk hidup.", type: "tf", options: ["BENAR", "SALAH"], a: 1, exp: "Berkarat adalah proses perubahan kimia yang hanya terjadi pada logam (benda mati), bukan ciri makhluk hidup." },
+                { q: "Meja, kursi, dan batu termasuk dalam kelompok...", options: ["Makhluk Hidup", "Tumbuhan", "Benda Mati (Tak Hidup)", "Hewan peliharaan"], a: 2, exp: "Benda-benda seperti meja, kursi, dan batu tidak memiliki kemampuan bernapas, makan, atau tumbuh sedikitpun, sehingga mereka secara mutlak masuk ke kelompok benda mati." },
+                { q: "Anak kucing bertambah besar menjadi kucing dewasa. Ini menunjukkan makhluk hidup bisa...", options: ["Bergerak", "Bernapas", "Tumbuh", "Peka terhadap rangsang"], a: 2, exp: "Perubahan wujud fisik dari kecil (anak kucing) bertambah besar dan tinggi (menjadi kucing dewasa) adalah bukti visual nyata bahwa makhluk hidup bisa 'Tumbuh'." },
+                { q: "Apa tujuan utama makhluk hidup berkembang biak?", options: ["Untuk memenangkan perlombaan", "Agar menjadi lebih kuat", "Melestarikan jenis agar tidak punah", "Untuk mendapatkan makanan"], a: 2, exp: "Satu-satunya tujuan makhluk hidup memiliki keturunan (berkembang biak) adalah untuk memperbanyak diri agar spesies mereka tidak musnah atau punah secara tragis." },
+                { q: "Contoh ciri 'Peka Terhadap Rangsang' pada manusia adalah...", options: ["Menutup telinga saat mendengar suara keras", "Berjalan ke sekolah", "Makan siang", "Tumbuh gigi"], a: 0, exp: "Gerakan refleks atau otomatis menutup telinga saat tiba-tiba mendengar petir atau suara bising adalah bukti respons tubuh kita (peka) terhadap rangsang gangguan dari luar." },
+                { q: "Batu tidak perlu diberi makan dan minum karena batu adalah...", options: ["Makhluk halus", "Benda mati (tak hidup)", "Tumbuhan", "Hewan karang"], a: 1, exp: "Tidak peduli berapa lama kamu membiarkannya, batu tidak akan pernah merasa lapar, haus, atau mati jika tidak makan karena dari awal batu memang sebuah benda mati." },
+                { q: "Semua makhluk hidup perlu ... untuk bertahan hidup dan mendapat tenaga.", options: ["Pakaian", "Makanan dan Minuman", "Mainan", "Rumah mewah"], a: 1, exp: "Entah itu manusia, hewan, ataupun tumbuhan hijau, setiap makhluk hidup di bumi ini mutlak dan wajib memakan dan meminum sesuatu untuk memproduksi tenaga (energi) guna bertahan hidup setiap harinya." },
+                { q: "Mobil bukanlah makhluk hidup meskipun ia bisa melaju dengan sangat kencang.", type: "tf", options: ["BENAR", "SALAH"], a: 0, exp: "Jangan terkecoh! Walaupun mobil dapat bergerak, ia sama sekali tidak bisa bernapas dan tidak akan bisa tumbuh membesar. Sehingga mobil jelas BUKAN makhluk hidup." },
+                { q: "Tumbuhan bergerak mengikuti arah cahaya matahari. Ini adalah bukti ciri...", options: ["Bernapas", "Tumbuh", "Berkembang biak", "Peka terhadap rangsang & bergerak"], a: 3, exp: "Tumbuhan yang diam-diam membungkuk secara perlahan ke arah sumber cahaya matahari merupakan bukti terkuat bahwa tumbuhan juga bisa bergerak dan peka terhadap rangsangan cahaya." },
+                { q: "Ciri utama yang membedakan robot dengan manusia adalah...", options: ["Robot butuh listrik, manusia butuh makanan & napas", "Robot bisa berjalan", "Manusia punya tangan", "Robot bisa berbicara"], a: 0, exp: "Manusia (kita) adalah makhluk hidup sejati yang mendapatkan energi dari memakan dan bernapas, sedangkan robot hanyalah benda mati yang menyala karena disuplai oleh listrik." }
+            ]
+        };
+
+        const levelData = {
+            1: { name: "Taman Manusia", theme: "theme-level-1", badge: "Lencana Pengamat", icon: "🏡", color: "btn-wood-blue" },
+            2: { name: "Hutan Satwa", theme: "theme-level-2", badge: "Lencana Penjelajah", icon: "🦁", color: "btn-wood-green" },
+            3: { name: "Kebun Raya", theme: "theme-level-3", badge: "Lencana Botanis", icon: "🌱", color: "btn-wood-primary" },
+            4: { name: "Pulau Kehidupan", theme: "theme-level-4", badge: "Ahli Biologi Cilik", icon: "🏝️", color: "btn-wood-red" }
+        };
+
+        const cardsData = {
+            1: { id: 1, name: "Manusia (Pramuka)", icon: "👦", desc: "Makhluk hidup yang tumbuh, butuh makan, minum, dan bernapas dengan paru-paru." },
+            2: { id: 2, name: "Harimau Sumatera", icon: "🐯", desc: "Hewan karnivora darat yang peka terhadap rangsang dan berkembang biak dengan melahirkan." },
+            3: { id: 3, name: "Putri Malu", icon: "🌿", desc: "Tumbuhan yang bisa membuat makanan sendiri (fotosintesis) dan daunnya menguncup saat disentuh." },
+            4: { id: 4, name: "Robot Penjelajah", icon: "🤖", desc: "Benda mati. Bisa bergerak menggunakan baterai, tapi tidak bernapas dan tidak tumbuh besar." }
+        };
+        
+        const eggData = {
+            1: { icon: "🍄", fact: "Tahukah kamu? Jamur bukan tumbuhan! Mereka punya kelompok sendiri bernama Fungi karena tidak bisa berfotosintesis." },
+            2: { icon: "🌿", fact: "Tahukah kamu? Bambu adalah tanaman dengan pertumbuhan paling cepat di bumi. Bisa tumbuh hingga 1 meter dalam sehari!" },
+            3: { icon: "🪨", fact: "Tahukah kamu? Batu apung adalah satu-satunya batu di dunia yang bisa mengambang di air karena penuh dengan lubang udara." }
+        };
+
+        const storyData = {
+            1: { 
+                title: "Catatan: Taman Manusia", 
+                dialogues: [
+                    "Hoo! Halo penjelajah! Mari kita mulai dari yang terdekat: Manusia!",
+                    "Manusia itu makhluk hidup lho. Supaya punya energi dan tenaga, kita butuh makan makanan bergizi seperti 4 Sehat 5 Sempurna.",
+                    "Saat cuaca panas, kita merasa haus, itu tanda kita butuh Minum atau Air.",
+                    "Kita juga bernapas menghirup udara bersih bernama Oksigen menggunakan organ Paru-paru.",
+                    "Pernah lihat fotomu saat masih bayi? Sekarang kamu sudah besar kan? Itu namanya Pertumbuhan!",
+                    "Manusia menggunakan matanya untuk melihat sekitar, dan tinggal di dalam Rumah agar terlindung dari hujan.",
+                    "Lalu, jika kamu menyentuh panci panas, tanganmu pasti otomatis menjauh. Nah, itu namanya 'Peka Terhadap Rangsang'.",
+                    "Oh ya, cara manusia berkembang biak untuk meneruskan keturunan adalah dengan cara melahirkan.",
+                    "Ingat baik-baik penjelasanku dan bersiaplah untuk kuis!"
+                ] 
+            },
+            2: { 
+                title: "Catatan: Hutan Satwa", 
+                dialogues: [
+                    "Hoo.. Hoo! Selamat datang di Hutan! Jangan salah, hewan juga makhluk hidup!",
+                    "Cara mereka bergerak beda-beda. Burung terbang pakai sayap, dan ular melata alias merayap.",
+                    "Tempat hidup alami ikan dan terumbu karang ada di Air. Ikan bernapas menggunakan Insang!",
+                    "Lalu ada Katak yang disebut hewan Amfibi, artinya ia bisa hidup di Darat dan di Air.",
+                    "Hewan pemakan tumbuhan seperti sapi, kambing, dan kuda disebut Herbivora. Kalau pemakan daging disebut Karnivora.",
+                    "Supaya tidak punah, hewan mamalia berkembang biak dengan Melahirkan, sedangkan unggas seperti ayam dengan Bertelur.",
+                    "Oh iya, hewan juga peka terhadap rangsang lho! Kucing akan mengeluarkan suara atau lari saat ada bahaya.",
+                    "Siapkan ingatanmu, karena kuis akan segera dimulai!"
+                ] 
+            },
+            3: { 
+                title: "Catatan: Kebun Raya", 
+                dialogues: [
+                    "Hoo! Banyak yang mengira tumbuhan itu benda mati karena diam saja. Eits, itu salah besar!",
+                    "Tumbuhan adalah makhluk hidup. Akar bertugas menyerap air dari dalam tanah.",
+                    "Lalu, Batang akan menyalurkan air dan zat makanan itu sampai ke daun.",
+                    "Mereka bernapas lewat pori-pori daun bernama Stomata.",
+                    "Kerennya lagi, tumbuhan bisa membuat makanan sendiri (Fotosintesis) dengan bantuan cahaya Matahari!",
+                    "Saat fotosintesis, mereka butuh Air dan gas Karbon Dioksida, lalu mengubahnya menjadi udara segar yaitu Oksigen.",
+                    "Tumbuhan juga punya Bunga yang berwarna-warni untuk menarik serangga, dan Buah untuk melindungi biji.",
+                    "Sama seperti hewan, tumbuhan berkembang biak untuk melestarikan jenisnya agar tidak punah.",
+                    "Pernah sentuh daun putri malu yang langsung menguncup? Itu bukti mereka peka terhadap rangsangan. Mari mulai kuisnya!"
+                ] 
+            },
+            4: { 
+                title: "Catatan: Pulau Kehidupan", 
+                dialogues: [
+                    "Tantangan terakhir! Mari bedakan dengan tepat antara makhluk hidup dan benda mati.",
+                    "Ingat ciri-ciri makhluk hidup: Bernapas, butuh Makanan & Minuman, Bergerak, dan Tumbuh besar.",
+                    "Mereka juga Berkembang Biak agar tidak punah, serta Peka Terhadap Rangsang.",
+                    "Contoh peka rangsang: manusia akan menutup telinga saat mendengar suara keras, dan tumbuhan bergerak mengikuti cahaya.",
+                    "Benda mati tidak punya ciri tersebut. Ciri seperti 'berkarat' adalah ciri benda mati, bukan makhluk hidup.",
+                    "Batu, meja, dan kursi adalah benda mati, jadi mereka tidak perlu diberi makan dan minum.",
+                    "Walau mobil bisa bergerak, ia bukan makhluk hidup karena tidak bernapas dan tidak tumbuh besar.",
+                    "Begitu juga Robot penjelajah. Robot hanya bergerak dengan baterai, sedangkan manusia butuh makanan dan napas.",
+                    "Buktikan kepadaku kalau kamu adalah Ahli Alam sejati!"
+                ] 
+            }
+        };
+
+        const mascotQuotes = [
+            "Hoo! Catat baik-baik di jurnalmu!",
+            "Baca pertanyaannya pelan-pelan ya!",
+            "Wah, kamu pintar sekali!",
+            "Kumpulkan daun yang banyak ya!",
+            "Pilih jawaban dengan teliti!",
+            "Jangan menyerah, penjelajah cilik!"
+        ];
+
+        let gameState = { unlockedLevel: 1, totalScore: 0, badges: [], unlockedCards: [], playerName: "", levelScores: {1:0, 2:0, 3:0, 4:0}, foundEggs: [] };
+        let currentSession = { level: 1, questions: [], currentIndex: 0, score: 0, lives: 3, combo: 0, timer: null, timeLeft: 20, correctAnswers: 0, wrongAnswers: 0 };
+        let dialogueState = { array: [], currentIndex: 0, isTyping: false, timeoutId: null };
+
+        window.onload = () => {
+            initConfetti();
+            loadProgress();
+            setTimeout(() => {
+                document.getElementById('loading-bar').style.width = '100%';
+                setTimeout(() => {
+                    document.getElementById('screen-loading').classList.remove('active');
+                    if (!gameState.playerName) {
+                        showNameInput();
+                    } else {
+                        showScreen('screen-menu');
+                        updateWelcomeText();
+                        triggerMascot(`Halo lagi, ${gameState.playerName}! Yuk jelajahi alam liar bersamaku!`);
+                    }
+                }, 500);
+            }, 1000);
+        };
+
+        function showNameInput() {
+            document.body.className = "w-full h-screen text-dark relative theme-main";
+            document.getElementById('modal-name-input').classList.replace('hidden', 'flex');
+            playSound('click');
+        }
+
+        function savePlayerName() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if (nameInput === "") {
+                Swal.fire({ icon: 'warning', title: 'Hoo!', text: 'Tulis namamu dulu ya sebelum berpetualang!', confirmButtonColor: '#8B5A2B' });
+                return;
+            }
+            playSound('correct');
+            if (!bgmStarted) startBGM();
+            gameState.playerName = nameInput;
+            saveProgress();
+            document.getElementById('modal-name-input').classList.replace('flex', 'hidden');
+            showScreen('screen-menu');
+            updateWelcomeText();
+            triggerMascot(`Salam kenal, ${gameState.playerName}! Yuk mulai petualangan kita!`);
+        }
+
+        function updateWelcomeText() {
+            const welcomeEl = document.getElementById('menu-welcome-text');
+            if (welcomeEl && gameState.playerName) welcomeEl.innerText = `Halo, ${gameState.playerName}!`;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            playSound('click');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function saveProgress() {
+            localStorage.setItem('ipasMakhlukHidupSave', JSON.stringify(gameState));
+            updateMapUI();
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('ipasMakhlukHidupSave');
+            if (saved) { 
+                gameState = JSON.parse(saved); 
+                if (!gameState.unlockedCards) gameState.unlockedCards = [];
+                if (!gameState.playerName) gameState.playerName = "";
+                if (!gameState.levelScores) gameState.levelScores = {1:0, 2:0, 3:0, 4:0};
+                if (!gameState.foundEggs) gameState.foundEggs = [];
+            }
+            updateMapUI();
+        }
+
+        function resetProgress() {
+            Swal.fire({
+                title: 'Hapus Jejak?',
+                text: "Semua pos, koleksi kartu, daun, dan namamu akan dihapus dari ingatan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#8B5A2B',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    gameState = { unlockedLevel: 1, totalScore: 0, badges: [], unlockedCards: [], playerName: "", levelScores: {1:0, 2:0, 3:0, 4:0}, foundEggs: [] };
+                    saveProgress();
+                    Swal.fire('Terhapus!', 'Buku catatanmu kembali kosong.', 'success').then(() => {
+                        window.location.reload(); 
+                    });
+                }
+            });
+        }
+
+        function triggerMascot(text) {
+            const container = document.getElementById('mascot-container');
+            const textEl = document.getElementById('mascot-text');
+            textEl.innerText = text;
+            container.classList.remove('translate-y-32');
+            setTimeout(() => { container.classList.add('translate-y-32'); }, 4000);
+        }
+
+        function mascotCheer() {
+            playSound('click');
+            triggerMascot(mascotQuotes[Math.floor(Math.random() * mascotQuotes.length)]);
+        }
+
+        function startGameMenu() {
+            if (!bgmStarted) startBGM();
+            showScreen('screen-map');
+            updateMapUI();
+            triggerMascot("Pilih pos di peta yang sudah terbuka!");
+        }
+
+        function updateMapUI() {
+            document.getElementById('map-score').innerText = gameState.totalScore;
+            
+            for (let m = 1; m <= 5; m++) {
+                const markerContainer = document.getElementById(`player-marker-${m}`);
+                if (markerContainer) {
+                    if (m === gameState.unlockedLevel || (m === 5 && gameState.unlockedLevel > 4)) {
+                        markerContainer.innerHTML = `
+                            <div class="flex flex-col items-center animate-bounce">
+                                <div class="bg-yellow-400 text-woodDark text-[10px] md:text-xs font-black px-3 py-1 rounded-full border-2 border-woodDark shadow-lg mb-1 whitespace-nowrap uppercase tracking-wider">Kamu di sini!</div>
+                                <div class="text-4xl md:text-5xl drop-shadow-xl filter" style="text-shadow: 0 4px 6px rgba(0,0,0,0.4);">📍</div>
+                            </div>
+                        `;
+                    } else {
+                        markerContainer.innerHTML = '';
+                    }
+                }
+            }
+            
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`btn-level-${i}`);
+                const starContainer = document.getElementById(`stars-level-${i}`);
+                
+                if (i <= gameState.unlockedLevel) {
+                    btn.classList.remove('bg-gray-400', 'border-gray-600', 'cursor-not-allowed');
+                    if(i==1) btn.className = "btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full btn-wood-blue flex flex-col items-center justify-center text-4xl shadow-2xl relative z-10 border-4 border-white";
+                    if(i==2) btn.className = "btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full btn-wood-green flex flex-col items-center justify-center text-4xl shadow-2xl relative z-10 border-4 border-white";
+                    if(i==3) btn.className = "btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full btn-wood-paper flex flex-col items-center justify-center text-4xl shadow-2xl relative z-10 border-4 border-white";
+                    if(i==4) btn.className = "btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full btn-wood-red flex flex-col items-center justify-center text-4xl shadow-2xl relative z-10 border-4 border-white";
+                    
+                    btn.innerHTML = levelData[i].icon;
+                    
+                    const highScore = gameState.levelScores[i] || 0;
+                    let starCount = 0;
+                    if (highScore >= 100) starCount = 3;      
+                    else if (highScore >= 60) starCount = 2;  
+                    else if (highScore > 0) starCount = 1;    
+
+                    let starsHTML = '';
+                    for(let s = 0; s < 3; s++) {
+                        if(s < starCount) starsHTML += '<i class="fas fa-star text-yellow-400 drop-shadow-md" style="-webkit-text-stroke: 1px #5C3A21;"></i>';
+                        else starsHTML += '<i class="fas fa-star text-gray-400 opacity-60"></i>';
+                    }
+                    if (starContainer) starContainer.innerHTML = starsHTML;
+
+                } else {
+                    btn.className = "btn-3d w-24 h-24 md:w-32 md:h-32 rounded-full bg-gray-400 border-4 border-gray-600 border-b-8 flex flex-col items-center justify-center text-white text-4xl shadow-xl relative z-10 cursor-not-allowed";
+                    btn.innerHTML = '<i class="fas fa-lock text-2xl md:text-3xl"></i>';
+                    if (starContainer) starContainer.innerHTML = '';
+                }
+            }
+            
+            for (let e = 1; e <= 3; e++) {
+                const eggEl = document.getElementById(`egg-${e}`);
+                if (eggEl) {
+                    if (gameState.foundEggs && gameState.foundEggs.includes(e)) eggEl.style.display = 'none';
+                    else eggEl.style.display = 'block';
+                }
+            }
+        }
+
+        function findEgg(id) {
+            playSound('correct');
+            if (!gameState.foundEggs) gameState.foundEggs = [];
+            if (gameState.foundEggs.includes(id)) return;
+            
+            gameState.foundEggs.push(id);
+            gameState.totalScore += 5;
+            saveProgress(); 
+
+            document.getElementById('egg-modal-icon').innerText = eggData[id].icon;
+            document.getElementById('egg-modal-fact').innerText = eggData[id].fact;
+            document.getElementById('modal-easter-egg').classList.replace('hidden', 'flex');
+            customConfetti({ particleCount: 40, spread: 70, origin: { y: 0.6 }, colors: ['#4ADE80', '#F59E0B', '#FFF'] });
+        }
+
+        function closeEggModal() {
+            playSound('click');
+            document.getElementById('modal-easter-egg').classList.replace('flex', 'hidden');
+        }
+
+        function startLevel(level) {
+            if (level > gameState.unlockedLevel) {
+                playSound('wrong');
+                Swal.fire({ icon: 'error', title: 'Pos Terkunci! 🔒', text: 'Selesaikan pos sebelumnya dulu ya!', confirmButtonColor: '#8B5A2B' });
+                return;
+            }
+
+            document.body.className = `w-full h-screen text-dark relative ${levelData[level].theme}`;
+            currentSession.level = level; currentSession.score = 0; currentSession.lives = 3; currentSession.combo = 0; currentSession.currentIndex = 0;
+            currentSession.correctAnswers = 0; currentSession.wrongAnswers = 0;
+            
+            let pool = [...questionBank[level]]; pool = shuffleArray(pool);
+            currentSession.questions = pool.slice(0, 10);
+            showStoryScreen(level);
+        }
+
+        function showStoryScreen(level) {
+            document.getElementById('story-title').innerText = storyData[level].title;
+            dialogueState.array = storyData[level].dialogues;
+            dialogueState.currentIndex = 0;
+            
+            document.getElementById('btn-next-dialogue').classList.remove('hidden');
+            document.getElementById('btn-start-quiz').classList.add('hidden');
+            
+            showScreen('screen-story');
+            triggerMascot("Hoo! Dengarkan ceritaku baik-baik ya!");
+            typeDialogue();
+        }
+
+        function typeDialogue() {
+            if(dialogueState.currentIndex >= dialogueState.array.length) return;
+            const textEl = document.getElementById('story-text');
+            const currentText = dialogueState.array[dialogueState.currentIndex];
+            textEl.innerHTML = '';
+            dialogueState.isTyping = true;
+            let i = 0;
+            
+            clearInterval(dialogueState.timeoutId);
+            playSound('click'); 
+            dialogueState.timeoutId = setInterval(() => {
+                textEl.innerHTML += currentText.charAt(i);
+                i++;
+                if (i >= currentText.length) {
+                    clearInterval(dialogueState.timeoutId);
+                    dialogueState.isTyping = false;
+                    checkDialogueEnd();
+                }
+            }, 35);
+        }
+
+        function nextDialogue() {
+            playSound('click');
+            if (dialogueState.isTyping) {
+                clearInterval(dialogueState.timeoutId);
+                document.getElementById('story-text').innerHTML = dialogueState.array[dialogueState.currentIndex];
+                dialogueState.isTyping = false;
+                checkDialogueEnd();
+            } else {
+                dialogueState.currentIndex++;
+                if (dialogueState.currentIndex < dialogueState.array.length) typeDialogue();
+            }
+        }
+
+        function checkDialogueEnd() {
+            if (dialogueState.currentIndex === dialogueState.array.length - 1) {
+                document.getElementById('btn-next-dialogue').classList.add('hidden');
+                document.getElementById('btn-start-quiz').classList.remove('hidden');
+            }
+        }
+
+        function proceedToGame() {
+            updateHUD(); 
+            showScreen('screen-game');
+            triggerMascot(`Waktunya menguji ingatanmu, ${gameState.playerName}!`);
+            loadQuestion();
+        }
+
+        function updateHUD() {
+            document.getElementById('game-score').innerText = currentSession.score;
+            const livesContainer = document.getElementById('lives-container');
+            livesContainer.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                if(i < currentSession.lives) livesContainer.innerHTML += '<i class="fas fa-heart text-red-500 drop-shadow-md"></i> ';
+                else livesContainer.innerHTML += '<i class="fas fa-heart text-woodDark opacity-50"></i> ';
+            }
+        }
+
+        function loadQuestion() {
+            if (currentSession.currentIndex >= currentSession.questions.length) { finishLevel(); return; }
+            const qData = currentSession.questions[currentSession.currentIndex];
+            document.getElementById('q-current').innerText = currentSession.currentIndex + 1;
+            document.getElementById('question-text').innerText = qData.q;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            if (qData.type === 'tf') {
+                optionsContainer.className = "grid grid-cols-2 gap-4 mt-4";
+                qData.options.forEach((opt, index) => {
+                    const btn = document.createElement('button');
+                    let colorClass = index === 0 ? "btn-wood-green" : "btn-wood-red";
+                    let iconClass = index === 0 ? "fa-check" : "fa-times";
+                    btn.className = `btn-3d w-full ${colorClass} text-white font-bold py-6 px-4 md:py-8 md:px-6 rounded-2xl border-4 border-white text-xl md:text-3xl text-center transition-colors flex flex-col items-center justify-center shadow-lg`;
+                    btn.innerHTML = `<i class="fas ${iconClass} mb-2 text-3xl md:text-5xl drop-shadow-md"></i><span class="drop-shadow-md">${opt}</span>`;
+                    btn.onclick = () => checkAnswer(index, btn);
+                    optionsContainer.appendChild(btn);
+                });
+            } else {
+                optionsContainer.className = "grid grid-cols-1 gap-3 md:gap-4";
+                qData.options.forEach((opt, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-3d w-full btn-wood-paper font-bold py-3 px-4 md:py-4 md:px-6 text-base md:text-xl text-left transition-colors flex items-center shadow-md";
+                    btn.innerHTML = `<span class="inline-block shrink-0 w-8 h-8 bg-wood text-white border-2 border-woodDark rounded-full text-center leading-7 mr-3 font-bold">${String.fromCharCode(65 + index)}</span> <span>${opt}</span>`;
+                    btn.onclick = () => checkAnswer(index, btn);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            // Memperbaiki transisi untuk mengurangi efek flash putih di perangkat seluler
+            const card = document.getElementById('question-card');
+            if (card) {
+                card.classList.remove('content-fade-in');
+                void card.offsetWidth; // Memaksa browser me-render ulang
+                card.classList.add('content-fade-in');
+            }
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(currentSession.timer); currentSession.timeLeft = 20;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = '100%'; bar.className = 'h-full bg-green-400 rounded-full w-full transition-all duration-1000 linear shadow-md';
+
+            currentSession.timer = setInterval(() => {
+                currentSession.timeLeft--;
+                const percentage = (currentSession.timeLeft / 20) * 100;
+                bar.style.width = `${percentage}%`;
+                if (currentSession.timeLeft <= 5) bar.classList.replace('bg-green-400', 'bg-red-500');
+                if (currentSession.timeLeft <= 0) { 
+                    clearInterval(currentSession.timer); 
+                    const buttons = document.getElementById('options-container').querySelectorAll('button');
+                    buttons.forEach(b => b.disabled = true);
+                    handleWrong(null, null); 
+                }
+            }, 1000);
+        }
+
+        // --- TRANSISI FADE OUT HALUS SEBELUM MENGGANTI SOAL ---
+        function transitionToNextQuestion() {
+            const card = document.getElementById('question-card');
+            if (card) {
+                card.style.transition = 'opacity 0.2s ease';
+                card.style.opacity = '0';
+            }
+            
+            setTimeout(() => {
+                if(card) {
+                    card.style.transition = '';
+                    card.style.opacity = '';
+                }
+                currentSession.currentIndex++; 
+                loadQuestion(); 
+            }, 200); // Tunggu layar memudar 0.2 detik baru HTML-nya diganti
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            clearInterval(currentSession.timer);
+            const buttons = document.getElementById('options-container').querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+            const qData = currentSession.questions[currentSession.currentIndex];
+            
+            if (selectedIndex === qData.a) {
+                playSound('correct');
+                
+                if (qData.type !== 'tf') {
+                    btnElement.classList.replace('btn-wood-paper', 'btn-wood-green');
+                    btnElement.classList.replace('text-ink', 'text-white');
+                } else {
+                    btnElement.classList.add('ring-4', 'ring-yellow-400');
+                }
+                
+                currentSession.combo++;
+                currentSession.correctAnswers++;
+                let points = 10 + (currentSession.combo > 1 ? 5 : 0); 
+                currentSession.score += points;
+                
+                customConfetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#4ADE80', '#8B5A2B', '#FFF8DC'] });
+                updateHUD(); triggerMascot(currentSession.combo > 2 ? "Hoo! Kombo yang mantap! 🔥" : "Jawaban Tepat! 🎉");
+                
+                // Gunakan transisi halus
+                setTimeout(() => { transitionToNextQuestion(); }, 1200);
+            } else {
+                handleWrong(btnElement, qData);
+                
+                if (qData.type !== 'tf') {
+                    buttons[qData.a].classList.replace('btn-wood-paper', 'btn-wood-green');
+                    buttons[qData.a].classList.replace('text-ink', 'text-white');
+                } else {
+                    buttons[qData.a].classList.add('ring-4', 'ring-yellow-400', 'animate-pulse');
+                }
+            }
+        }
+
+        function handleWrong(btnElement, qData) {
+            playSound('wrong'); currentSession.combo = 0; currentSession.lives--; currentSession.wrongAnswers++; updateHUD();
+            const card = document.getElementById('question-card');
+            if (card) card.classList.add('animate-shake');
+
+            if (btnElement) {
+                if (!qData || qData.type !== 'tf') {
+                    btnElement.classList.replace('btn-wood-paper', 'btn-wood-red');
+                    btnElement.classList.replace('text-ink', 'text-white');
+                } else {
+                    btnElement.classList.add('opacity-50'); 
+                }
+            }
+
+            setTimeout(() => {
+                const currentQ = currentSession.questions[currentSession.currentIndex];
+                
+                if (qData) {
+                    document.getElementById('feedback-title').innerText = "Yah, Masih Keliru! 🤔";
+                    document.getElementById('feedback-icon').innerText = "🦉";
+                    document.getElementById('feedback-correct-answer').innerText = currentQ.options[currentQ.a];
+                    document.getElementById('feedback-explanation').innerText = currentQ.exp;
+                    triggerMascot("Hoo! Perhatikan pembahasannya baik-baik ya, " + gameState.playerName + "!");
+                } else {
+                    document.getElementById('feedback-title').innerText = "Waktu Habis! ⏰";
+                    document.getElementById('feedback-icon').innerText = "⏳";
+                    document.getElementById('feedback-correct-answer').innerText = currentQ.options[currentQ.a];
+                    document.getElementById('feedback-explanation').innerText = currentQ.exp;
+                    triggerMascot("Wah, waktumu habis! Ayo baca pembahasannya dulu.");
+                }
+                
+                document.getElementById('modal-feedback').classList.replace('hidden', 'flex');
+            }, 800);
+        }
+
+        function closeFeedback() {
+            playSound('click');
+            document.getElementById('modal-feedback').classList.replace('flex', 'hidden');
+            
+            if (currentSession.lives <= 0) {
+                gameOver(); 
+            } else { 
+                // Gunakan transisi halus
+                transitionToNextQuestion();
+            }
+        }
+
+        function gameOver() {
+            playSound('lose');
+            Swal.fire({
+                title: 'Tenaga Habis!', text: `Kamu membawa pulang ${currentSession.score} Daun. Ayo coba lagi!`, icon: 'error',
+                confirmButtonText: 'Kembali ke Peta', confirmButtonColor: '#8B5A2B', allowOutsideClick: false
+            }).then(() => { backToMap(); });
+        }
+
+        function finishLevel() {
+            playSound('win');
+            var duration = 3 * 1000; var end = Date.now() + duration;
+            (function frame() {
+                customConfetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#4ADE80', '#F59E0B'] });
+                customConfetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#8B5A2B', '#4ADE80'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+
+            gameState.totalScore += currentSession.score;
+            if (currentSession.score > (gameState.levelScores[currentSession.level] || 0)) {
+                gameState.levelScores[currentSession.level] = currentSession.score;
+            }
+
+            let unlockedNew = false;
+            if (currentSession.level == gameState.unlockedLevel && gameState.unlockedLevel < 4) { gameState.unlockedLevel++; unlockedNew = true; }
+
+            const levelInfo = levelData[currentSession.level]; let gotBadge = false;
+            if (!gameState.badges.includes(levelInfo.badge)) { gameState.badges.push(levelInfo.badge); gotBadge = true; }
+            
+            let gotCard = false;
+            if (!gameState.unlockedCards.includes(currentSession.level)) {
+                gameState.unlockedCards.push(currentSession.level);
+                gotCard = true;
+            }
+
+            saveProgress();
+
+            document.getElementById('result-score').innerText = currentSession.score;
+            document.getElementById('result-title').innerText = unlockedNew ? "Pos Diselesaikan!" : "Kerja Bagus!";
+            
+            const badgeReward = document.getElementById('badge-reward');
+            if (gotBadge) {
+                badgeReward.classList.replace('hidden', 'flex'); document.getElementById('badge-name').innerText = levelInfo.badge;
+            } else { badgeReward.classList.replace('flex', 'hidden'); }
+
+            const cardReward = document.getElementById('card-reward');
+            if (gotCard) {
+                const cData = cardsData[currentSession.level];
+                cardReward.classList.replace('hidden', 'flex');
+                document.getElementById('card-reward-icon').innerText = cData.icon;
+                document.getElementById('card-reward-name').innerText = cData.name;
+                document.getElementById('card-reward-desc').innerText = cData.desc;
+            } else {
+                cardReward.classList.replace('flex', 'hidden');
+            }
+
+            const certBox = document.getElementById('certificate-box');
+            const certNameEl = document.getElementById('cert-player-name');
+            if (certNameEl && gameState.playerName) certNameEl.innerText = gameState.playerName; 
+            
+            if (currentSession.level === 4 && gotBadge) {
+                certBox.classList.replace('hidden', 'flex'); triggerMascot(`Luar biasa! Kamu kini adalah Ahli Alam Cilik yang resmi, ${gameState.playerName}!`);
+            } else { certBox.classList.replace('flex', 'hidden'); triggerMascot(`Hoo hoo! Terus kumpulkan daun dan kartu koleksi, ${gameState.playerName}!`); }
+
+            showScreen('screen-result');
+        }
+
+        function showReport() {
+            playSound('click');
+            document.getElementById('report-correct').innerText = currentSession.correctAnswers;
+            document.getElementById('report-wrong').innerText = currentSession.wrongAnswers;
+            let grade = currentSession.correctAnswers * 10;
+            document.getElementById('report-score').innerText = grade;
+            document.getElementById('modal-report').classList.replace('hidden', 'flex');
+        }
+
+        function closeReport() {
+            playSound('click');
+            document.getElementById('modal-report').classList.replace('flex', 'hidden');
+        }
+
+        function quitGame() {
+            playSound('click'); clearInterval(currentSession.timer);
+            Swal.fire({
+                title: 'Tinggalkan Pos?', text: "Daun yang kamu kumpulkan di ronde ini akan hilang.", icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#8B5A2B', cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Pulang', cancelButtonText: 'Lanjut Main'
+            }).then((result) => {
+                if (result.isConfirmed) backToMap(); 
+                else startTimer(); 
+            });
+        }
+
+        function backToMap() {
+            playSound('click'); document.body.className = "w-full h-screen text-dark relative theme-main"; 
+            showScreen('screen-map'); updateMapUI();
+        }
+
+        function openCollection() {
+            playSound('click');
+            renderCollection();
+            document.body.className = "w-full h-screen text-dark relative theme-main";
+            showScreen('screen-collection');
+            triggerMascot("Ini Ensiklopediamu! Ayo kumpulkan semua kartu makhluk hidup!");
+        }
+
+        function closeCollection() {
+            playSound('click');
+            showScreen('screen-menu');
+        }
+
+        function renderCollection() {
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 4; i++) {
+                const cardData = cardsData[i];
+                const isUnlocked = gameState.unlockedCards.includes(i);
+                
+                if (isUnlocked) {
+                    grid.innerHTML += `
+                        <div class="wood-board p-3 rounded-xl flex items-center gap-3 md:gap-4 bg-[#fdf5e6] transform transition hover:-translate-y-1">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-wood/20 border-2 border-woodDark rounded-lg flex items-center justify-center text-4xl md:text-5xl shrink-0 shadow-inner">
+                                ${cardData.icon}
+                            </div>
+                            <div>
+                                <h4 class="font-black text-white bg-woodDark px-2 py-1 rounded inline-block text-sm md:text-base mb-1 shadow">${cardData.name}</h4>
+                                <p class="text-[10px] md:text-xs text-ink font-medium leading-tight bg-paper/80 p-2 rounded border border-wood/30">${cardData.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML += `
+                        <div class="wood-board p-3 rounded-xl flex items-center gap-3 md:gap-4 bg-gray-200 grayscale opacity-70">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-gray-300 border-2 border-gray-500 rounded-lg flex items-center justify-center text-3xl shrink-0 shadow-inner">
+                                <i class="fas fa-lock text-gray-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-gray-700 bg-gray-400 px-2 py-1 rounded inline-block text-sm mb-1">Misteri</h4>
+                                <p class="text-[10px] md:text-xs text-gray-600 font-medium leading-tight">Selesaikan Pos ${i} untuk membuka kartu ini.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
